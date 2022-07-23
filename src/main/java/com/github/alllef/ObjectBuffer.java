@@ -2,6 +2,7 @@ package com.github.alllef;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -11,6 +12,8 @@ public class ObjectBuffer {
     private final Lock lock = new ReentrantLock();
     private final Condition elemAdded = lock.newCondition();
     private final Condition capacityRemains = lock.newCondition();
+    private final AtomicInteger servicedObjectsNum = new AtomicInteger(0);
+    private final AtomicInteger failuresNum = new AtomicInteger(0);
 
     public CustomObject take() {
         try {
@@ -27,15 +30,14 @@ public class ObjectBuffer {
     }
 
     public void put(CustomObject object) {
-        try {
-            while (queue.remainingCapacity() == 0)
-                capacityRemains.await();
-            queue.put(object);
+        if (queue.remainingCapacity() != 0) {
+            try {
+                queue.put(object);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
             elemAdded.signalAll();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } finally {
-            lock.unlock();
-        }
+        } else
+            failuresNum.incrementAndGet();
     }
 }
