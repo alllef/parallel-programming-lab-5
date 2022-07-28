@@ -1,12 +1,16 @@
 package com.github.alllef;
 
 import java.util.Random;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class Producer implements Runnable {
-    private final ObjectBuffer objectBuffer;
+    private final BlockingQueue<CustomObject> buffer;
+    private final AtomicInteger failuresNum;
 
-    public Producer(ObjectBuffer objectBuffer) {
-        this.objectBuffer = objectBuffer;
+    public Producer(BlockingQueue<CustomObject> buffer, AtomicInteger failuresNum) {
+        this.buffer = buffer;
+        this.failuresNum = failuresNum;
     }
 
     @Override
@@ -14,7 +18,8 @@ public class Producer implements Runnable {
         Random random = new Random();
         while (true) {
             CustomObject object = new CustomObject("object");
-            objectBuffer.put(object);
+            if (!buffer.offer(object))
+                failuresNum.incrementAndGet();
             try {
                 Thread.sleep(random.nextInt(10));
             } catch (InterruptedException e) {

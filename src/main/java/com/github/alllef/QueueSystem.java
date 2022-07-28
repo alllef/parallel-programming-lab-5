@@ -1,33 +1,23 @@
 package com.github.alllef;
 
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class QueueSystem {
     private final ConsumerPool consumerPool;
-    private final ObjectBuffer objectBuffer;
+    private final BlockingQueue<CustomObject> buffer;
     private final AtomicInteger failuresNum = new AtomicInteger(0);
     private final AtomicInteger servicedObjectsNum = new AtomicInteger(0);
+    private final Logger log = Logger.getLogger("Failures");
 
     public QueueSystem(int consumersNum, int bufferNum) {
-        this.consumerPool = ConsumerPool.createPool(consumersNum, servicedObjectsNum);
-        this.objectBuffer = new ObjectBuffer(bufferNum);
-    }
-
-    public CustomObject take() {
-        return objectBuffer.take();
-    }
-
-    public boolean put(CustomObject object) {
-        if (consumerPool.tryExecute(object))
-            return true;
-        else {
-            if (objectBuffer.put(object))
-                return true;
-            else {
-                failuresNum.incrementAndGet();
-                return false;
-            }
-        }
+        this.buffer = new ArrayBlockingQueue<>(bufferNum);
+        this.consumerPool = ConsumerPool.createPool(consumersNum, servicedObjectsNum, buffer);
+        consumerPool.run();
+        new Producer(buffer, failuresNum).run();
     }
 
     public int getFailuresNum() {
