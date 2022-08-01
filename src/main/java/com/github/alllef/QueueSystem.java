@@ -1,30 +1,29 @@
 package com.github.alllef;
 
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
+import java.util.List;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.IntStream;
 
-public class QueueSystem {
-    private final ConsumerPool consumerPool;
+public class QueueSystem implements Runnable {
     private final BlockingQueue<CustomObject> buffer;
     private final AtomicInteger failuresNum = new AtomicInteger(0);
     private final AtomicInteger servicedObjectsNum = new AtomicInteger(0);
+    private final int consumersNum;
 
     public QueueSystem(int consumersNum, int bufferNum) {
         this.buffer = new ArrayBlockingQueue<>(bufferNum);
-        this.consumerPool = ConsumerPool.createPool(consumersNum, servicedObjectsNum, buffer);
-        consumerPool.run();
-        Thread thread = new Thread(new StatsProcess(buffer));
-        new Producer(buffer, failuresNum).run();
+        this.consumersNum = consumersNum;
     }
 
-    public int getFailuresNum() {
-        return failuresNum.get();
-    }
-
-    public int getServicedObjectsNum() {
-        return servicedObjectsNum.get();
+    @Override
+    public void run() {
+        List.of(new Producer(buffer, failuresNum), new StatsProcess(buffer))
+                .forEach(runnable -> new Thread(runnable).start());
+        var consumerPool = Executors.newFixedThreadPool(consumersNum);
+        IntStream.range(0, consumersNum).forEach(__ ->
+                consumerPool.execute(new Consumer(servicedObjectsNum, buffer)));
     }
 }
