@@ -27,4 +27,8 @@ public class QueueSystem {
     public int getServicedObjectsNum() {
         return servicedObjectsNum.get();
     }
+
+    public int getBufferSize(){
+        return buffer.size();
+    }
 }

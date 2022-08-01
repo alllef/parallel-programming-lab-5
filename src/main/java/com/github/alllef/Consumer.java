@@ -19,7 +19,8 @@ public class Consumer implements Runnable {
 
     @Override
     public void run() {
-        while (true) {
+        long start = System.currentTimeMillis();
+        while (System.currentTimeMillis()-start < Variables.PROCESSING_TIME_MS) {
             try {
                 objectBuffer.take();
             } catch (InterruptedException e) {
@@ -27,7 +28,7 @@ public class Consumer implements Runnable {
             }
             Random rand = new Random();
             try {
-                Thread.sleep((long) (Math.abs(rand.nextGaussian() * 100)));
+                Thread.sleep((long) (Math.abs(rand.nextGaussian() * Variables.CONSUMER_PROCESSING_MS)));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }

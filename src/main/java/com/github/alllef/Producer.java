@@ -15,13 +15,14 @@ public class Producer implements Runnable {
 
     @Override
     public void run() {
+        long start = System.currentTimeMillis();
         Random random = new Random();
-        while (true) {
+        while (System.currentTimeMillis() - start < Variables.PROCESSING_TIME_MS) {
             CustomObject object = new CustomObject("object");
             if (!buffer.offer(object))
                 failuresNum.incrementAndGet();
             try {
-                Thread.sleep(random.nextInt(10));
+                Thread.sleep(Variables.PRODUCER_DELAY_MS);
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
