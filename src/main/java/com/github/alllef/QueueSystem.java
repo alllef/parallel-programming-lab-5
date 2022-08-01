@@ -11,12 +11,12 @@ public class QueueSystem {
     private final BlockingQueue<CustomObject> buffer;
     private final AtomicInteger failuresNum = new AtomicInteger(0);
     private final AtomicInteger servicedObjectsNum = new AtomicInteger(0);
-    private final Logger log = Logger.getLogger("Failures");
 
     public QueueSystem(int consumersNum, int bufferNum) {
         this.buffer = new ArrayBlockingQueue<>(bufferNum);
         this.consumerPool = ConsumerPool.createPool(consumersNum, servicedObjectsNum, buffer);
         consumerPool.run();
+        Thread thread = new Thread(new StatsProcess(buffer));
         new Producer(buffer, failuresNum).run();
     }
 
@@ -26,9 +26,5 @@ public class QueueSystem {
 
     public int getServicedObjectsNum() {
         return servicedObjectsNum.get();
-    }
-
-    public int getBufferSize(){
-        return buffer.size();
     }
 }

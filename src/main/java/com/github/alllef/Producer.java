@@ -22,7 +22,7 @@ public class Producer implements Runnable {
             if (!buffer.offer(object))
                 failuresNum.incrementAndGet();
             try {
-                Thread.sleep(Variables.PRODUCER_DELAY_MS);
+                Thread.sleep(random.nextLong(Variables.PRODUCER_DELAY_MS));
             } catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
