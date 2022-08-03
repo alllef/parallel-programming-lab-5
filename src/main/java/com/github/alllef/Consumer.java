@@ -33,7 +33,7 @@ public class Consumer implements Runnable {
                 e.printStackTrace();
             }
             servicedObjectsNum.incrementAndGet();
-            log.log(Level.INFO, "" + servicedObjectsNum.get());
+           // log.log(Level.INFO, "" + servicedObjectsNum.get());
         }
     }
 
