@@ -34,11 +34,13 @@ public class StatsProcess implements Callable<StatsResult> {
 
     @Override
     public StatsResult call() throws Exception {
+        int imitationId = new Random().nextInt();
+
         long start = System.currentTimeMillis();
         List<Integer> bufferSizes = new ArrayList<>();
 
         while (System.currentTimeMillis() - start < Variables.PROCESSING_TIME_MS) {
-            String logString = String.format("Objects in buffer: %d Number of serviced objects: %d Number of failures: %d", buffer.size(), servicedObjectsNum.get(), failuresNum.get());
+            String logString = String.format("For imitation id %d objects in buffer: %d Number of serviced objects: %d Number of failures: %d",imitationId, buffer.size(), servicedObjectsNum.get(), failuresNum.get());
             bufferSizes.add(buffer.size());
             log.log(Level.INFO, logString);
             try {
